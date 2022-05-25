@@ -15,34 +15,42 @@ from dataclasses import dataclass
 class OpenFDDParam:
     name: str
     description: str
+    type: str
+    typeInfo: list[str]
 
 
 class OpenFDDDeviceAction():
     def __init__(self,
                  connection: 'OpenFDDConnection',
                  device: 'OpenFDDDevice',
-                 actionID: str, actionDescription: str) -> None:
+                 id: str, name: str, description: str) -> None:
         self.device = device
-        self.actionID = actionID
-        self.description = actionDescription
+        self.name = name
+        self.id = id
+        self.description = description
         self._connection = connection
 
     def getParams(self) -> list[OpenFDDParam]:
-        command = f"list-action-params,{self.device.deviceID},{self.actionID}"
+        command = f"list-action-params,{self.device.id},{self.id}"
         self._connection.sendLine(command)
 
         line = self._connection.readLine()
         params: list[OpenFDDParam] = []
 
         while line[0] != "done" and line[0] != "fail":
-            paramID, paramDescription = line
-            params.append(OpenFDDParam(paramID, paramDescription))
+            paramName = line[1]
+            paramDescription = line[2]
+            paramType = line[3]
+
+            params.append(OpenFDDParam(paramName,
+                          paramDescription, paramType, line[3:]))
             line = self._connection.readLine()
 
+        print(params)
         return params
 
     def run(self, params: list[str]):
-        command = f"action-run,{self.device.deviceID},{self.actionID},"
+        command = f"action-run,{self.device.id},{self.id},"
         for param in params:
             command += param + ','
 
@@ -53,24 +61,24 @@ class OpenFDDDeviceAction():
 
 
 class OpenFDDDevice():
-    def __init__(self, connection: 'OpenFDDConnection', device_id: str, name: str) -> None:
+    def __init__(self, connection: 'OpenFDDConnection', id: str, name: str) -> None:
         self._connection = connection
-        self.deviceID = device_id
+        self.id = id
         self.name = name
 
     def __repr__(self) -> str:
         return f"OpenFDDDevice('{self.name}')"
 
     def getActions(self) -> list[OpenFDDDeviceAction]:
-        self._connection.sendLine("list-actions," + self.deviceID)
+        self._connection.sendLine("list-actions," + self.id)
 
         line = self._connection.readLine()
         actions: list[OpenFDDDeviceAction] = []
 
         while line[0] != "done" and line[0] != "fail":
-            action_id, action_description = line
+            actionID, actionName, actionDescription = line
             actions.append(OpenFDDDeviceAction(
-                self._connection, self, action_id, action_description))
+                self._connection, self, actionID, actionName, actionDescription))
             line = self._connection.readLine()
 
         return actions
@@ -155,7 +163,7 @@ class ActionRunnerPopup(QWidget):
 
         layout = QVBoxLayout()
 
-        layout.addWidget(QLabel(action.actionID))
+        layout.addWidget(QLabel(action.id))
 
         for param in action.getParams():
             paramWidget = self._createParamWidget(param)
@@ -235,7 +243,7 @@ class DeviceActionWidget(QDialog):
         widget = QWidget()
         layout = QVBoxLayout()
 
-        nameLabel = QLabel(self.action.actionID)
+        nameLabel = QLabel(self.action.name)
         layout.addWidget(nameLabel)
 
         descriptionLabel = QLabel(self.action.description)
