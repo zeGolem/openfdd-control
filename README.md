@@ -3,6 +3,8 @@
 This is a sample frontend for [OpenFDD](https://github.com/zeGolem/openfdd). It's still
 very, _very_ experimental, but it works enough to be usable for testing purposes.
 
+Working using openfdd@ec29878c872bf17a8eeef55ed1d285df4d47c18d
+
 # Running
 
 You'll need Python 3 and PyQt5 installed on your system. Then, run with
