@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from PyQt5.QtWidgets import (QApplication, QDialog, QLineEdit, QWidget, QMainWindow,
+from PyQt5.QtWidgets import (QApplication, QDialog, QLineEdit, QSpinBox, QWidget, QMainWindow,
                              QVBoxLayout, QHBoxLayout,
                              QPushButton, QListWidget, QListWidgetItem, QLabel)
 from PyQt5 import QtCore
@@ -17,6 +17,12 @@ class OpenFDDParam:
     description: str
     type: str
     typeInfo: list[str]
+
+    def getUintInfo(self):
+        return {
+            "min": int(self.typeInfo[0]),
+            "max": int(self.typeInfo[1]),
+        }
 
 
 class OpenFDDDeviceAction():
@@ -159,7 +165,7 @@ class ActionRunnerPopup(QWidget):
 
         self.action = action
 
-        self._paramsValueEdits: dict[str, QLineEdit] = {}
+        self._paramsValueInputs: dict[str, QLineEdit] = {}
 
         layout = QVBoxLayout()
 
@@ -182,12 +188,21 @@ class ActionRunnerPopup(QWidget):
         nameAndDescription = self._createParamNameAndDescriptionWidget(param)
         layout.addWidget(nameAndDescription)
 
-        paramValueEdit = QLineEdit()
-        self._paramsValueEdits[param.name] = paramValueEdit
-        layout.addWidget(paramValueEdit)
+        paramValueInput = self._createValueInputForParam(param)
+        self._paramsValueInputs[param.name] = paramValueInput
+        layout.addWidget(paramValueInput)
 
         widget.setLayout(layout)
         return widget
+
+    def _createValueInputForParam(self, param: OpenFDDParam) -> QWidget:
+        match param.type:
+            case "uint":
+                widget = QSpinBox()
+                info = param.getUintInfo()
+                widget.setRange(info["min"], info["max"])
+                return widget
+            case _: return QLineEdit()
 
     def _createParamNameAndDescriptionWidget(self, param: OpenFDDParam) -> QWidget:
         widget = QWidget()
@@ -203,7 +218,7 @@ class ActionRunnerPopup(QWidget):
         paramValues: list[str] = []
 
         for param in self.action.getParams():
-            paramValues.append(self._paramsValueEdits[param.name].text())
+            paramValues.append(self._paramsValueInputs[param.name].text())
 
         self.action.run(paramValues)
         self.close()
