@@ -43,7 +43,7 @@ class OpenFDDDeviceAction():
             paramType = line[2]
 
             params.append(OpenFDDParam(paramName,
-                          paramDescription, paramType, line[2:]))
+                          paramDescription, paramType, line[3:]))
             line = self._connection.readLine()
 
         print(params)
