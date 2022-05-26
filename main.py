@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from PyQt5.QtWidgets import (QApplication, QDialog, QLineEdit, QSpinBox, QWidget, QMainWindow,
-                             QVBoxLayout, QHBoxLayout,
+                             QVBoxLayout, QHBoxLayout, QColorDialog,
                              QPushButton, QListWidget, QListWidgetItem, QLabel)
 from PyQt5 import QtCore
 
@@ -159,6 +159,22 @@ class OpenFDDConnection():
         return devices
 
 
+class ColorPickerButton(QPushButton):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._colorString = "ffffff"
+        self.setText('#' + self._colorString)
+        self.clicked.connect(self._showPicker)
+
+    def _showPicker(self):
+        self._colorString = QColorDialog.getColor().name()[1:]
+        self.setText('#' + self._colorString)
+
+    def text(self):
+        return self._colorString
+
+
 class ActionRunnerPopup(QWidget):
     def __init__(self, parent: QWidget, action: OpenFDDDeviceAction) -> None:
         super().__init__(parent, QtCore.Qt.Dialog)
@@ -202,6 +218,10 @@ class ActionRunnerPopup(QWidget):
                 info = param.getUintInfo()
                 widget.setRange(info["min"], info["max"])
                 return widget
+
+            case "rgb_color":
+                return ColorPickerButton()
+
             case _: return QLineEdit()
 
     def _createParamNameAndDescriptionWidget(self, param: OpenFDDParam) -> QWidget:
