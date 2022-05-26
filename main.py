@@ -38,12 +38,12 @@ class OpenFDDDeviceAction():
         params: list[OpenFDDParam] = []
 
         while line[0] != "done" and line[0] != "fail":
-            paramName = line[1]
-            paramDescription = line[2]
-            paramType = line[3]
+            paramName = line[0]
+            paramDescription = line[1]
+            paramType = line[2]
 
             params.append(OpenFDDParam(paramName,
-                          paramDescription, paramType, line[3:]))
+                          paramDescription, paramType, line[2:]))
             line = self._connection.readLine()
 
         print(params)
